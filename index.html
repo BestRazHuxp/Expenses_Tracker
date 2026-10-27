@@ -13,5 +13,18 @@
             </select>
             <button type="submit">View</button>
         </form>
+        <form method="POST" action="/api/transactions">
+            <div>Add transactions</div>
+            <select name = "category" id = "category_adding"></select>
+            <script src="SelectLoader.js" ></script>
+            <input type="number" required name = "amount">
+            <select name="coefficient">
+                <option value= "-1" >Outcome</option>
+                <option value= "1" >Income</option>
+            </select>
+            <input type="text" name = "note" placeholder = "Note">
+            <input type="datetime-local" name = "date" placeholder="Date">
+            <button type="submit" >Add</button>
+        </form>
     </body>
 </html>

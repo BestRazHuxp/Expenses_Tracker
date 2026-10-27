@@ -1,8 +1,8 @@
 const {DatabaseSync} = require("node:sqlite");
 
-const expenses = new DatabaseSync("expenses.db");
+const db = new DatabaseSync("expenses.db");
 
-expenses.exec(
+db.exec(
     `CREATE TABLE IF NOT EXISTS transactions (
         id INTEGER PRIMARY KEY,
         amount INTEGER NOT NULL CHECK(amount > 0), 
@@ -15,7 +15,7 @@ expenses.exec(
     )`
 );
 
-expenses.exec(
+db.exec(
     `CREATE TABLE IF NOT EXISTS current_categories (
         category_id INTEGER NOT NULL,
         storage_id INTEGER NOT NULL, 
@@ -28,7 +28,7 @@ expenses.exec(
     )`
 );
 
-expenses.exec(
+db.exec(
     `
     CREATE TABLE IF NOT EXISTS categories(
         category_id INTEGER PRIMARY KEY, 
@@ -37,7 +37,7 @@ expenses.exec(
     `
 )
 
-expenses.exec(
+db.exec(
     `
     CREATE TABLE IF NOT EXISTS review_months(
         storage_id INTEGER PRIMARY KEY,
@@ -47,5 +47,5 @@ expenses.exec(
     )
     `
 )
-
-module.exports = expenses;
+console.log("Database ready");
+module.exports = db;
