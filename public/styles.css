@@ -1,0 +1,13 @@
+body { font-family: system-ui, sans-serif; max-width: 1000px; margin: 32px auto; padding: 0 16px; color: #1f2937; background: #f8fafc; }
+form { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 20px 0; }
+input, select, button { font: inherit; padding: 9px; border: 1px solid #cbd5e1; border-radius: 6px; }
+button { background: #1d4ed8; color: white; cursor: pointer; }
+button:disabled { opacity: .6; cursor: wait; }
+.table-container { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; background: white; }
+caption { text-align: left; padding: 12px 0; font-weight: 600; }
+th, td { padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: left; }
+td { white-space: pre-wrap; overflow-wrap: anywhere; }
+.amount { text-align: right; white-space: nowrap; }
+.income { color: #166534; }
+.expense { color: #b91c1c; }

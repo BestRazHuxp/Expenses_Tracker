@@ -21,6 +21,9 @@ app.get("/api/categories" , (req, res) =>
 app.get("/SelectLoader.js", (req, res) => {
     res.sendFile("SelectLoader.js", { root: __dirname });
 });
+app.get("/SummaryForm.js", (req, res) => {
+    res.sendFile("SummaryForm.js", { root: __dirname });
+});
 
 const display = () => {
     app.get("/" ,async (req, res) => {
@@ -85,22 +88,21 @@ const convertSQliteDate = (date) => {
     return date.toISOString().slice(0, 19).replace("T", " ");
 }
 app.get('/api/transactions' , (req, res) => {
-    const {period} =  req.query;
+    if ((req.get("Accept") || "").includes("text/html")) {
+        return res.sendFile("transactions.html", { root: __dirname });
+    }
+
+    const period = req.query.period || "day";
     const range = getTimeRange(period);
     res.status(200);
     console.log("PERIOD:", req.query.period);
 
-console.log("START:", convertSQliteDate(range.start));
-console.log("END:", convertSQliteDate(range.end));
+    console.log("START:", convertSQliteDate(range.start));
+    console.log("END:", convertSQliteDate(range.end));
 
-console.log("DATABASE:", db.prepare(`
-    SELECT id, created_at
-    FROM transactions
-`).all());
     const action = db.prepare(
         'SELECT * from transactions WHERE created_at >= (?) AND created_at < (?)'
     ).all(convertSQliteDate(range.start) , convertSQliteDate(range.end));
-    console.log(action);
     res.end(JSON.stringify(action));
 
 });

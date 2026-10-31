@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="vi">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Giao dịch | Expense Tracker</title>
+    </head>
+    <body>
+        <section id="transactions">
+        <style>
+            #transactions { font: 16px system-ui, sans-serif; max-width: 960px; margin: 24px auto; padding: 28px; color: #193b32; background: #f3f8f5; border: 1px solid #d6e5dc; border-radius: 18px; }
+            #transactions h1 { margin-top: 0; }
+            #transactions select, #transactions button { font: inherit; padding: 10px 16px; border: 1px solid #bfd5c9; border-radius: 8px; }
+            #transactions button { background: #17684e; color: white; cursor: pointer; }
+            #transactions button:disabled { opacity: .6; }
+            #transactions .totals { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+            #transactions .totals p { flex: 1; min-width: 160px; background: white; padding: 18px; border-radius: 12px; margin: 0; }
+            #transactions strong { display: block; margin-top: 8px; font-size: 22px; }
+            #transactions .scroll { overflow-x: auto; background: white; border-radius: 12px; }
+            #transactions table { width: 100%; border-collapse: collapse; white-space: nowrap; text-align: left; }
+            #transactions th, #transactions td { padding: 14px; border-bottom: 1px solid #e4ede7; }
+            #transactions th { background: #e7f0ea; }
+            #transactions .income { color: #14734e; }
+            #transactions .expense { color: #b24437; }
+        </style>
+        <h1>Tổng quan giao dịch</h1>
+        <form method="GET" action="/api/transactions/" id="transaction-filter">
+            <select name="period">
+                <option value="day">Day</option>  
+                <option value="week">Week</option>  
+                <option value="month">Month</option>  
+                <option value="year">Year</option>  
+            </select>
+            <button type="submit">View</button>
+        </form>
+        <div class="totals">
+            <p>Tổng thu<strong id="total-income" class="income">—</strong></p>
+            <p>Tổng chi<strong id="total-expense" class="expense">—</strong></p>
+            <p>Số dư trong kỳ<strong id="total-balance">—</strong></p>
+        </div>
+        <p id="transaction-status" role="status" aria-live="polite"></p>
+        <div class="scroll"><table>
+            <thead><tr><th scope="col">Thời gian</th><th scope="col">Danh mục (ID)</th><th scope="col">Loại</th><th scope="col">Số tiền</th></tr></thead>
+            <tbody id="transaction-rows"></tbody>
+        </table></div>
+        <script>
+            (() => {
+                const form = document.getElementById('transaction-filter');
+                const status = document.getElementById('transaction-status');
+                const rows = document.getElementById('transaction-rows');
+                const button = form.querySelector('button');
+                const money = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
+                async function load() {
+                    button.disabled = true;
+                    status.textContent = 'Đang tải giao dịch…';
+                    rows.replaceChildren();
+                    ['income', 'expense', 'balance'].forEach(key => document.getElementById('total-' + key).textContent = '—');
+                    try {
+                        const response = await fetch('/api/transactions?period=' + encodeURIComponent(form.elements.period.value));
+                        if (!response.ok) throw new Error('Request failed');
+                        const data = await response.json();
+                        if (!Array.isArray(data)) throw new Error('Invalid response');
+                        let income = 0, expense = 0;
+                        const fragment = document.createDocumentFragment();
+                        for (const item of data) {
+                            const amount = Number(item.amount);
+                            if (!Number.isFinite(amount)) throw new Error('Invalid amount');
+                            const isIncome = Number(item.coefficient) === 1;
+                            if (isIncome) income += amount; else expense += amount;
+                            const tr = document.createElement('tr');
+                            [item.created_at ?? '—', item.category_id ?? '—', isIncome ? 'Thu nhập' : 'Chi tiêu', (isIncome ? '+' : '−') + money.format(amount)].forEach((value, index) => {
+                                const td = document.createElement('td');
+                                td.textContent = value;
+                                if (index === 3) td.className = isIncome ? 'income' : 'expense';
+                                tr.appendChild(td);
+                            });
+                            fragment.appendChild(tr);
+                        }
+                        rows.replaceChildren(fragment);
+                        document.getElementById('total-income').textContent = money.format(income);
+                        document.getElementById('total-expense').textContent = money.format(expense);
+                        document.getElementById('total-balance').textContent = money.format(income - expense);
+                        status.textContent = data.length ? data.length + ' giao dịch trong kỳ.' : 'Chưa có giao dịch trong khoảng thời gian này.';
+                    } catch (error) {
+                        status.textContent = 'Không tải được giao dịch. Bấm View để thử lại.';
+                    } finally {
+                        button.disabled = false;
+                    }
+                }
+                form.addEventListener('submit', event => { event.preventDefault(); load(); });
+                const period = new URLSearchParams(window.location.search).get('period');
+                if (['day', 'week', 'month', 'year'].includes(period)) form.elements.period.value = period;
+                load();
+            })();
+        </script>
+        <section aria-labelledby="summary-title">
+            <h2 id="summary-title">Summary</h2>
+            <form method="GET" action="/api/summary" id="summary-form">
+                <label for="summary-period">Period</label>
+                <select name="period" id="summary-period">
+                    <option value="day">Day</option>
+                    <option value="month">Month</option>
+                    <option value="year">Year</option>
+                </select>
+                <label for="summary-date" id="summary-date-label">Date</label>
+                <input type="date" name="date" id="summary-date" required>
+                <button type="submit">View summary</button>
+            </form>
+            <script src="/SummaryForm.js" defer></script>
+        <section aria-labelledby="summary-title">
+            <h2 id="summary-title">Summary</h2>
+            <form method="GET" action="/api/summary" id="summary-form">
+                <label for="summary-period">Period</label>
+                <select name="period" id="summary-period">
+                    <option value="day">Day</option>
+                    <option value="month">Month</option>
+                    <option value="year">Year</option>
+                </select>
+                <label for="summary-date" id="summary-date-label">Date</label>
+                <input type="date" name="date" id="summary-date" required>
+                <button type="submit">View summary</button>
+            </form>
+            <script src="/SummaryForm.js" defer></script>
+        </section>
+        </section>
+        </section>
+    </body>
+</html>
